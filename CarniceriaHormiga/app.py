@@ -1,7 +1,6 @@
 import streamlit as st
 from dataclasses import dataclass
 
-# 1. Definición de la estructura de datos
 @dataclass
 class Producto:
     id_producto: int
@@ -9,7 +8,6 @@ class Producto:
     precio: float
     stock: int
 
-# 2. Inventario optimizado con diccionario (Búsqueda O(1))
 inventario = {
     201: Producto(201, "Costilla", 8500.0, 15),
     202: Producto(202, "Vacío", 9200.0, 10),
@@ -20,48 +18,51 @@ inventario = {
     207: Producto(207, "Falda", 5500.0, 12)
 }
 
-# 3. Gestión de estado para el carrito
 if 'carrito' not in st.session_state:
     st.session_state.carrito = []
+    
+# Variable para controlar si mostramos el mensaje de éxito
+if 'compra_finalizada' not in st.session_state:
+    st.session_state.compra_finalizada = False
 
-# 4. Interfaz Web Profesional
 st.set_page_config(page_title="Carnicería Hormiga", layout="wide")
-st.title("🥩 Carnicería Hormiga - Sistema de Ventas")
-st.markdown("---")
+st.title("🥩 Carnicería Hormiga")
 
-col1, col2 = st.columns([2, 1])
+# Lógica de mensaje de finalización
+if st.session_state.compra_finalizada:
+    st.success("¡Compra realizada con éxito!")
+    if st.button("Deseo comprar otros productos"):
+        st.session_state.compra_finalizada = False
+        st.rerun()
+    if st.button("Vuelva pronto"):
+        st.info("¡Gracias por su visita!")
+        st.stop()
+else:
+    col1, col2 = st.columns([2, 1])
 
-# Catálogo a la izquierda
-with col1:
-    st.subheader("Catálogo de Cortes Chaqueños")
-    for id_p, prod in inventario.items():
-        with st.container():
+    with col1:
+        st.subheader("Catálogo")
+        for id_p, prod in inventario.items():
             c1, c2 = st.columns([3, 1])
-            c1.write(f"**{prod.nombre}** | Precio: ${prod.precio} | Stock: {prod.stock}")
+            c1.write(f"**{prod.nombre}** | ${prod.precio}")
             if c2.button("Agregar", key=f"add_{id_p}"):
                 st.session_state.carrito.append(prod)
-                st.toast(f"{prod.nombre} agregado al carrito")
+                st.rerun() # Solo recargamos para que el carrito se actualice en silencio
 
-# Carrito a la derecha
-with col2:
-    st.subheader("🛒 Tu Carrito")
-    if st.session_state.carrito:
-        total = 0
-        for i, item in enumerate(st.session_state.carrito):
-            subcol1, subcol2 = st.columns([3, 1])
-            subcol1.write(f"{item.nombre} - ${item.precio}")
-            # Botón para eliminar un ítem específico
-            if subcol2.button("❌", key=f"del_{i}"):
-                st.session_state.carrito.pop(i)
+    with col2:
+        st.subheader("🛒 Carrito")
+        if st.session_state.carrito:
+            total = 0
+            for i, item in enumerate(st.session_state.carrito):
+                subc1, subc2 = st.columns([3, 1])
+                subc1.write(f"{item.nombre}: ${item.precio}")
+                if subc2.button("❌", key=f"del_{i}"):
+                    st.session_state.carrito.pop(i)
+                    st.rerun()
+                total += item.precio
+            st.write(f"### Total: ${total}")
+            if st.button("Finalizar Pedido"):
+                st.session_state.compra_finalizada = True
                 st.rerun()
-            total += item.precio
-        
-        st.divider()
-        st.write(f"### Total: ${total}")
-        
-        if st.button("Finalizar Pedido"):
-            st.success("¡Compra realizada! Te esperamos en Carnicería Hormiga.")
-            st.session_state.carrito = [] # Vaciamos el carrito
-            st.rerun() # Recargamos para limpiar la vista
-    else:
-        st.info("El carrito está vacío.")
+        else:
+            st.info("El carrito está vacío.")
