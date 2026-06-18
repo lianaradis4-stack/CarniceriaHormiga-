@@ -20,8 +20,6 @@ inventario = {
 
 if 'carrito' not in st.session_state:
     st.session_state.carrito = []
-    
-# Variable para controlar si mostramos el mensaje de éxito
 if 'compra_finalizada' not in st.session_state:
     st.session_state.compra_finalizada = False
 
@@ -30,13 +28,11 @@ st.title("🥩 Carnicería Hormiga")
 
 # Lógica de mensaje de finalización
 if st.session_state.compra_finalizada:
-    st.success("¡Compra realizada con éxito!")
+    st.success("¡Compra realizada con éxito! Vuelva pronto, ¡muchas gracias por su compra!")
     if st.button("Deseo comprar otros productos"):
         st.session_state.compra_finalizada = False
+        st.session_state.carrito = [] # Limpiamos el carrito al iniciar nueva compra
         st.rerun()
-    if st.button("Vuelva pronto"):
-        st.info("¡Gracias por su visita!")
-        st.stop()
 else:
     col1, col2 = st.columns([2, 1])
 
@@ -47,7 +43,7 @@ else:
             c1.write(f"**{prod.nombre}** | ${prod.precio}")
             if c2.button("Agregar", key=f"add_{id_p}"):
                 st.session_state.carrito.append(prod)
-                st.rerun() # Solo recargamos para que el carrito se actualice en silencio
+                st.rerun()
 
     with col2:
         st.subheader("🛒 Carrito")
