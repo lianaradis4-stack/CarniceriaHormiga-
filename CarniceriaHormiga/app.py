@@ -1,6 +1,24 @@
 import streamlit as st
 from dataclasses import dataclass
 
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(page_title="Carnicería Hormiga", layout="wide")
+
+# --- ESTILOS CSS (El toque profesional) ---
+st.markdown("""
+    <style>
+    .stApp { background-color: #0e1117; }
+    .card { 
+        background-color: #262730; 
+        padding: 20px; 
+        border-radius: 15px; 
+        border: 1px solid #ff4b4b; 
+        margin-bottom: 10px;
+    }
+    h1 { color: #ff4b4b; text-align: center; }
+    </style>
+    """, unsafe_allow_html=True)
+
 @dataclass
 class Producto:
     id_producto: int
@@ -18,47 +36,45 @@ inventario = {
     207: Producto(207, "Falda", 5500.0, 12)
 }
 
-if 'carrito' not in st.session_state:
-    st.session_state.carrito = []
-if 'compra_finalizada' not in st.session_state:
-    st.session_state.compra_finalizada = False
+if 'carrito' not in st.session_state: st.session_state.carrito = []
+if 'compra_finalizada' not in st.session_state: st.session_state.compra_finalizada = False
 
-st.set_page_config(page_title="Carnicería Hormiga", layout="wide")
-st.title("🥩 Carnicería Hormiga")
+st.title("🥩 CARNICERÍA HORMIGA")
 
-# Lógica de mensaje de finalización
 if st.session_state.compra_finalizada:
-    st.success("¡Compra realizada con éxito! Vuelva pronto, ¡muchas gracias por su compra!")
-    if st.button("Deseo comprar otros productos"):
+    st.success("¡Compra realizada con éxito! Vuelva pronto.")
+    if st.button("🛒 Seguir comprando"):
         st.session_state.compra_finalizada = False
-        st.session_state.carrito = [] # Limpiamos el carrito al iniciar nueva compra
+        st.session_state.carrito = []
         st.rerun()
 else:
     col1, col2 = st.columns([2, 1])
 
     with col1:
-        st.subheader("Catálogo")
+        st.subheader("Selección de Cortes")
         for id_p, prod in inventario.items():
-            c1, c2 = st.columns([3, 1])
-            c1.write(f"**{prod.nombre}** | ${prod.precio}")
-            if c2.button("Agregar", key=f"add_{id_p}"):
-                st.session_state.carrito.append(prod)
-                st.rerun()
+            # Creamos la tarjeta visual
+            with st.container():
+                st.markdown(f"""<div class="card">
+                    <h4>{prod.nombre}</h4>
+                    <p>Precio: ${prod.precio} | Stock: {prod.stock}</p>
+                </div>""", unsafe_allow_html=True)
+                if st.button("Agregar al carrito", key=f"add_{id_p}"):
+                    st.session_state.carrito.append(prod)
+                    st.rerun()
 
     with col2:
-        st.subheader("🛒 Carrito")
-        if st.session_state.carrito:
-            total = 0
-            for i, item in enumerate(st.session_state.carrito):
-                subc1, subc2 = st.columns([3, 1])
-                subc1.write(f"{item.nombre}: ${item.precio}")
-                if subc2.button("❌", key=f"del_{i}"):
-                    st.session_state.carrito.pop(i)
-                    st.rerun()
-                total += item.precio
-            st.write(f"### Total: ${total}")
-            if st.button("Finalizar Pedido"):
-                st.session_state.compra_finalizada = True
+        st.subheader("🛒 Tu Pedido")
+        total = 0
+        for i, item in enumerate(st.session_state.carrito):
+            subc1, subc2 = st.columns([3, 1])
+            subc1.write(f"{item.nombre}: ${item.precio}")
+            if subc2.button("❌", key=f"del_{i}"):
+                st.session_state.carrito.pop(i)
                 st.rerun()
-        else:
-            st.info("El carrito está vacío.")
+            total += item.precio
+        
+        st.markdown(f"### Total: ${total}")
+        if st.session_state.carrito and st.button("Finalizar Pedido"):
+            st.session_state.compra_finalizada = True
+            st.rerun()
