@@ -1,5 +1,46 @@
-# --- EN LUGAR DE ST.COLUMNS ---
-# Eliminamos las columnas y usamos el sidebar para el carrito
+import streamlit as st
+from dataclasses import dataclass
+
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(page_title="Carnicería Hormiga", layout="wide")
+
+# --- ESTILOS CSS ---
+st.markdown("""
+    <style>
+    .stApp { background-color: #0e1117; }
+    .card { 
+        background-color: #262730; 
+        padding: 20px; 
+        border-radius: 15px; 
+        border: 1px solid #ff4b4b; 
+        margin-bottom: 10px;
+    }
+    h1 { color: #ff4b4b; text-align: center; }
+    </style>
+    """, unsafe_allow_html=True)
+
+@dataclass
+class Producto:
+    id_producto: int
+    nombre: str
+    precio: float
+    stock: int
+
+# Inventario
+inventario = {
+    201: Producto(201, "Costilla", 8500.0, 15),
+    202: Producto(202, "Vacío", 9200.0, 10),
+    203: Producto(203, "Chorizo", 3500.0, 100),
+    204: Producto(204, "Milanesa de Nalga", 7800.0, 20),
+    205: Producto(205, "Aguja", 4200.0, 25),
+    206: Producto(206, "Matambre", 8900.0, 8),
+    207: Producto(207, "Falda", 5500.0, 12)
+}
+
+# Estado de la sesión
+if 'carrito' not in st.session_state: st.session_state.carrito = {} 
+if 'compra_finalizada' not in st.session_state: st.session_state.compra_finalizada = False
+
 st.title("🥩 CARNICERÍA HORMIGA")
 
 if st.session_state.compra_finalizada:
@@ -9,9 +50,8 @@ if st.session_state.compra_finalizada:
         st.session_state.carrito = {}
         st.rerun()
 else:
-    # --- CATÁLOGO PRINCIPAL ---
+    # Catálogo
     st.subheader("Selección de Cortes")
-    # Usamos columnas solo para el layout de los productos
     cols = st.columns(3) 
     for i, (id_p, prod) in enumerate(inventario.items()):
         with cols[i % 3]:
@@ -27,7 +67,7 @@ else:
                         st.session_state.carrito[id_p] = 1
                     st.rerun()
 
-    # --- CARRITO FLOTANTE (SIDEBAR) ---
+    # Sidebar (Carrito)
     with st.sidebar:
         st.header("🛒 Tu Pedido")
         total = 0
@@ -38,11 +78,9 @@ else:
                 prod = inventario[id_p]
                 subtotal = prod.precio * cantidad
                 total += subtotal
-                
                 st.write(f"**{prod.nombre}**")
                 c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
                 c1.write(f"Cant: {cantidad} | ${subtotal}")
-                
                 if c2.button("➕", key=f"add_s_{id_p}"):
                     st.session_state.carrito[id_p] += 1
                     st.rerun()
@@ -55,7 +93,6 @@ else:
                 if c4.button("🗑️", key=f"del_s_{id_p}"):
                     del st.session_state.carrito[id_p]
                     st.rerun()
-            
             st.markdown(f"### Total: ${total}")
             if st.button("Finalizar Pedido"):
                 st.session_state.compra_finalizada = True
