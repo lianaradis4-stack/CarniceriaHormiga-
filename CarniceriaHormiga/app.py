@@ -16,11 +16,6 @@ st.markdown("""
         margin-bottom: 10px;
     }
     h1 { color: #ff4b4b; text-align: center; }
-    /* Mueve el sidebar a la derecha */
-    [data-testid="stSidebar"] {
-        right: 0;
-        left: auto;
-    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -31,7 +26,6 @@ class Producto:
     precio: float
     stock: int
 
-# Inventario
 inventario = {
     201: Producto(201, "Costilla", 8500.0, 15),
     202: Producto(202, "Vacío", 9200.0, 10),
@@ -42,7 +36,6 @@ inventario = {
     207: Producto(207, "Falda", 5500.0, 12)
 }
 
-# Estado de la sesión
 if 'carrito' not in st.session_state: st.session_state.carrito = {} 
 if 'compra_finalizada' not in st.session_state: st.session_state.compra_finalizada = False
 
@@ -55,29 +48,34 @@ if st.session_state.compra_finalizada:
         st.session_state.carrito = {}
         st.rerun()
 else:
-    # Catálogo
-    st.subheader("Selección de Cortes")
-    cols = st.columns(3) 
-    for i, (id_p, prod) in enumerate(inventario.items()):
-        with cols[i % 3]:
-            with st.container():
-                st.markdown(f"""<div class="card">
-                        <h4>{prod.nombre}</h4>
-                        <p>Precio: ${prod.precio} | Stock: {prod.stock}</p>
-                    </div>""", unsafe_allow_html=True)
-                if st.button("Agregar", key=f"add_{id_p}"):
-                    if id_p in st.session_state.carrito:
-                        st.session_state.carrito[id_p] += 1
-                    else:
-                        st.session_state.carrito[id_p] = 1
-                    st.rerun()
+    # Creamos dos columnas principales: 70% catálogo, 30% carrito
+    col_main, col_cart = st.columns([0.7, 0.3])
 
-    # Sidebar (Carrito en la derecha gracias al CSS)
-    with st.sidebar:
-        st.header("🛒 Tu Pedido")
+    with col_main:
+        st.subheader("Selección de Cortes")
+        # Grilla de 2 columnas para los productos dentro del espacio del catálogo
+        g_cols = st.columns(2)
+        for i, (id_p, prod) in enumerate(inventario.items()):
+            with g_cols[i % 2]:
+                with st.container():
+                    st.markdown(f"""<div class="card">
+                            <h4>{prod.nombre}</h4>
+                            <p>Precio: ${prod.precio} | Stock: {prod.stock}</p>
+                        </div>""", unsafe_allow_html=True)
+                    if st.button("Agregar", key=f"add_{id_p}"):
+                        if id_p in st.session_state.carrito:
+                            st.session_state.carrito[id_p] += 1
+                        else:
+                            st.session_state.carrito[id_p] = 1
+                        st.rerun()
+
+    with col_cart:
+        # Contenedor visual para el carrito a la derecha
+        st.subheader("🛒 Tu Pedido")
         total = 0
+        
         if not st.session_state.carrito:
-            st.write("El carrito está vacío.")
+            st.info("El carrito está vacío.")
         else:
             for id_p, cantidad in list(st.session_state.carrito.items()):
                 prod = inventario[id_p]
@@ -101,6 +99,7 @@ else:
                     del st.session_state.carrito[id_p]
                     st.rerun()
             
+            st.markdown(f"---")
             st.markdown(f"### Total: ${total}")
             if st.button("Finalizar Pedido"):
                 st.session_state.compra_finalizada = True
