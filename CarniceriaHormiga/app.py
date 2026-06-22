@@ -4,7 +4,7 @@ from dataclasses import dataclass
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Carnicería Hormiga", layout="wide")
 
-# --- ESTILOS CSS (El toque profesional) ---
+# --- ESTILOS CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; }
@@ -26,6 +26,7 @@ class Producto:
     precio: float
     stock: int
 
+# Inventario (Usando el ID como clave principal)
 inventario = {
     201: Producto(201, "Costilla", 8500.0, 15),
     202: Producto(202, "Vacío", 9200.0, 10),
@@ -36,7 +37,8 @@ inventario = {
     207: Producto(207, "Falda", 5500.0, 12)
 }
 
-if 'carrito' not in st.session_state: st.session_state.carrito = []
+# Estado de la sesión
+if 'carrito' not in st.session_state: st.session_state.carrito = {} # Diccionario {id: cantidad}
 if 'compra_finalizada' not in st.session_state: st.session_state.compra_finalizada = False
 
 st.title("🥩 CARNICERÍA HORMIGA")
@@ -45,7 +47,7 @@ if st.session_state.compra_finalizada:
     st.success("¡Compra realizada con éxito! Vuelva pronto.")
     if st.button("🛒 Seguir comprando"):
         st.session_state.compra_finalizada = False
-        st.session_state.carrito = []
+        st.session_state.carrito = {}
         st.rerun()
 else:
     col1, col2 = st.columns([2, 1])
@@ -53,26 +55,32 @@ else:
     with col1:
         st.subheader("Selección de Cortes")
         for id_p, prod in inventario.items():
-            # Creamos la tarjeta visual
             with st.container():
                 st.markdown(f"""<div class="card">
-                    <h4>{prod.nombre}</h4>
-                    <p>Precio: ${prod.precio} | Stock: {prod.stock}</p>
-                </div>""", unsafe_allow_html=True)
+                        <h4>{prod.nombre}</h4>
+                        <p>Precio: ${prod.precio} | Stock: {prod.stock}</p>
+                    </div>""", unsafe_allow_html=True)
                 if st.button("Agregar al carrito", key=f"add_{id_p}"):
-                    st.session_state.carrito.append(prod)
+                    # Lógica con clave primaria
+                    if id_p in st.session_state.carrito:
+                        st.session_state.carrito[id_p] += 1
+                    else:
+                        st.session_state.carrito[id_p] = 1
                     st.rerun()
 
     with col2:
         st.subheader("🛒 Tu Pedido")
         total = 0
-        for i, item in enumerate(st.session_state.carrito):
+        for id_p, cantidad in st.session_state.carrito.items():
+            prod = inventario[id_p]
+            subtotal = prod.precio * cantidad
+            total += subtotal
+            
             subc1, subc2 = st.columns([3, 1])
-            subc1.write(f"{item.nombre}: ${item.precio}")
-            if subc2.button("❌", key=f"del_{i}"):
-                st.session_state.carrito.pop(i)
+            subc1.write(f"{prod.nombre} (x{cantidad}): ${subtotal}")
+            if subc2.button("❌", key=f"del_{id_p}"):
+                del st.session_state.carrito[id_p]
                 st.rerun()
-            total += item.precio
         
         st.markdown(f"### Total: ${total}")
         if st.session_state.carrito and st.button("Finalizar Pedido"):
