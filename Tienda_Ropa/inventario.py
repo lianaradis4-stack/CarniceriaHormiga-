@@ -1,18 +1,12 @@
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
-# 1. Creamos la conexión con Google Sheets
+st.title("👗 Inventario Tienda")
+
+# Conectamos directo poniendo el ID acá, así no tenés que configurar nada más
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# 2. Leemos la planilla (asegúrate de que el nombre del archivo en 
-# la configuración de Streamlit coincida con el nombre de tu hoja)
-df = conn.read(spreadsheet="InventarioTienda", usecols=[0, 1, 2, 3])
+# Acá pegamos el ID directo
+df = conn.read(spreadsheet="13GGCyTwzEqCUZbj7iFohsS60SmxGSmQNhmlLVgMwtHU", usecols=[0, 1, 2, 3])
 
-st.title("👗 Inventario de la Tienda")
-
-# 3. Mostramos los datos de forma elegante
-st.dataframe(df, use_container_width=True)
-
-# 4. (Opcional) Si querés que ella vea totales rápidos
-total_productos = len(df)
-st.metric("Productos cargados", total_productos)
+st.dataframe(df)
