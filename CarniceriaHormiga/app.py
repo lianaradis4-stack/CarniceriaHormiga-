@@ -16,6 +16,11 @@ st.markdown("""
         margin-bottom: 10px;
     }
     h1 { color: #ff4b4b; text-align: center; }
+    /* Mueve el sidebar a la derecha */
+    [data-testid="stSidebar"] {
+        right: 0;
+        left: auto;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -67,7 +72,7 @@ else:
                         st.session_state.carrito[id_p] = 1
                     st.rerun()
 
-    # Sidebar (Carrito)
+    # Sidebar (Carrito en la derecha gracias al CSS)
     with st.sidebar:
         st.header("🛒 Tu Pedido")
         total = 0
@@ -78,9 +83,11 @@ else:
                 prod = inventario[id_p]
                 subtotal = prod.precio * cantidad
                 total += subtotal
+                
                 st.write(f"**{prod.nombre}**")
                 c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
                 c1.write(f"Cant: {cantidad} | ${subtotal}")
+                
                 if c2.button("➕", key=f"add_s_{id_p}"):
                     st.session_state.carrito[id_p] += 1
                     st.rerun()
@@ -93,6 +100,7 @@ else:
                 if c4.button("🗑️", key=f"del_s_{id_p}"):
                     del st.session_state.carrito[id_p]
                     st.rerun()
+            
             st.markdown(f"### Total: ${total}")
             if st.button("Finalizar Pedido"):
                 st.session_state.compra_finalizada = True
